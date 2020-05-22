@@ -1,3 +1,3 @@
 module.exports = {
-    "keys": "your key here!"
+    'keys': 'your key here!'
 }

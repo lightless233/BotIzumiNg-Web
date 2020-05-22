@@ -22,7 +22,11 @@ module.exports = appInfo => {
         listen: {
             hostname: '0.0.0.0'
         }
-    }
+    };
+
+    config.logger = {
+        consoleLevel: 'DEBUG',
+    };
 
     // add your user config here
     const userConfig = {
