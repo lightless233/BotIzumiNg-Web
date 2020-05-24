@@ -19,94 +19,6 @@ class ChartController extends Controller {
     }
 
     /*
-        data={
-            "data": "100,200,50,2000",
-            "xAxis": "<auto>" or "a,b,c,d"
-        }&showImg=1
-     */
-    async line() {
-
-        const {ctx} = this;
-        const query = this.ctx.query;
-        const response = {
-            code: 0,
-            msg: '',
-            data: '',
-        }
-
-        const logger = ctx.logger
-
-        let data = query.data || null
-        let showImg = query.showImg || '0'
-        try {
-            showImg = parseInt(showImg)
-        } catch (e) {
-            response.code = 500
-            response.msg = "showImg error."
-            ctx.body = response
-            return
-        }
-
-        if (data === null) {
-            response.code = 500
-            response.msg = 'data is null!'
-            ctx.body = response
-            return
-        }
-
-        // 校验data的数据
-        data = JSON.parse(data)
-        let seriesData = data.data.split(',').map(numStr => parseFloat(numStr))
-        let finalAxis;
-        logger.debug("seriesData:" + seriesData)
-        if (data.xAxis === "<auto>") {
-            finalAxis = new Array(seriesData.length).fill('x')
-        } else {
-            if (seriesData.length !== data.xAxis.split(',').length) {
-                response.code = 500
-                response.msg = 'xAxis.length not eq to data.length'
-                ctx.body = response
-                return
-            }
-            finalAxis = data.xAxis.split(',')
-        }
-
-        let canvasCtx = canvas.createCanvas(800, 450)
-        echarts.setCanvasCreator(() => canvasCtx);
-        let chart = echarts.init(canvasCtx);
-        chart.setOption({
-            xAxis: {
-                type: 'category',
-                data: finalAxis
-            },
-            yAxis: {
-                type: 'value',
-                minInterval: 1, // 保证Y轴最小间隔为1，不出现小数
-            },
-            series: [{
-                data: seriesData,
-                type: 'line',
-                animation: false,
-                smooth: true,
-                label: {show: true}
-            }],
-            animation: false,
-            backgroundColor: 'rgb(255, 255, 255)'
-        })
-
-        // 根据 showImg 参数决定返回类型
-        if (showImg === 1) {
-            ctx.set('Content-type', 'image/png');
-            ctx.body = chart.getDom().toBuffer();
-        } else {
-            response.msg = "success"
-            response.code = 200
-            response.data = chart.getDom().toDataURL('image/jpeg')
-            ctx.body = response
-        }
-    }
-
-    /*
         data = {
             "data": [
                 {
@@ -156,14 +68,13 @@ class ChartController extends Controller {
             rawSeriesData.forEach(it => {
                 seriesArray.push({
                     name: it.name,
-                    data: it.value.map(it => {
-                        parseFloat(it)
-                    }),    // TODO here
+                    data: it.value.map(numStr => parseFloat(numStr)),
                     type: 'line',
                     smooth: true,
                     label: {show: true}
                 });
                 legendArray.push(it.name);
+                // logger.info("it.value: %j", it.value)
             })
         } catch (e) {
             response.msg = "error while parse series data"
@@ -173,10 +84,11 @@ class ChartController extends Controller {
         logger.info("seriesArray: %j", seriesArray)
 
         let xAxis = null
+        const xLength = seriesArray[0].data.length
         if (data.xAxis === this.AUTO) {
-            xAxis = new Array(seriesArray.length).fill('x')
+            xAxis = new Array(xLength).fill('x')
         } else {
-            if (seriesArray.length !== data.xAxis.split(',').length) {
+            if (xLength !== data.xAxis.split(',').length) {
                 response.code = 500
                 response.msg = 'xAxis.length not eq to data.length'
                 ctx.body = response
@@ -197,7 +109,7 @@ class ChartController extends Controller {
         let canvasCtx = canvas.createCanvas(800, 450)
         echarts.setCanvasCreator(() => canvasCtx);
         let chart = echarts.init(canvasCtx);
-        chart.setOption({
+        const opt = {
             title: {
                 text: title
             },
@@ -215,7 +127,9 @@ class ChartController extends Controller {
             legend: {
                 data: legendArray
             },
-        });
+        };
+        logger.info("opt: %j", opt)
+        chart.setOption(opt)
 
         if (showImg === 1) {
             ctx.set('Content-Type', 'image/png');

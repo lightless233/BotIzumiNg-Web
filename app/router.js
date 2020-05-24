@@ -6,5 +6,5 @@
 module.exports = app => {
   const { router, controller } = app;
   router.get('/', controller.home.index);
-  router.get('/chart/line', controller.chart.line);
+  router.get('/chart/multi_line', controller.chart.multiLine)
 };
