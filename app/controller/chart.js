@@ -106,7 +106,7 @@ class ChartController extends Controller {
         // title
         const title = data.title || "无标题"
 
-        let canvasCtx = canvas.createCanvas(800, 450)
+        let canvasCtx = canvas.createCanvas(1080, 450)
         echarts.setCanvasCreator(() => canvasCtx);
         let chart = echarts.init(canvasCtx);
         const opt = {
